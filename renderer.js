@@ -16,16 +16,18 @@ let vertexShaderSource, fragmentShaderSource;
 let program, positionAttributeLocation;
 let resolutionUniformLocation, timeUniformLocation, mouseUniformLocation;
 let mouseX, mouseY; mouseX=mouseY=0;
+let mouseInX, mouseInY; mouseInX=mouseInY=0;
 
 // Update global variables mouseX and mouseY upon mouse move,
 // so they can later be used by our fragment shader as u_mouse uniforms.
 document.addEventListener('mousemove', mousemoveHandler);
 function mousemoveHandler(e) {
   e = e || window.event;
-  mouseX = e.pageX * window.devicePixelRatio;
-  mouseY = e.pageY * window.devicePixelRatio;
-}
+  mouseX = e.pageX; // *realToCSSPixels deleted for performance
+  mouseY = e.pageY; // *realToCSSPixels deleted for performance
 
+  
+}
 
 
 
@@ -78,7 +80,7 @@ makeRequest('GET', '/vertexShader.glsl')
 
   // Then, async load the fragment shader.
 //   return makeRequest('GET', '/fragmentShaders/ray_marching/01.glsl');
-  return makeRequest('GET', '/fragmentShaders/ray_marching/03.glsl');
+  return makeRequest('GET', '/fragmentShaders/ray_marching/02.glsl');
 })
 .then(function (data) {
   // When resolved, save the fragment shader in the global variable.
@@ -223,9 +225,9 @@ function setBuffer() {
 function resizeCanvasToDisplaySize(canvas) {
   
   // Get real-CSS pixel ratio in case of Retina display
-  var realToCSSPixels = window.devicePixelRatio;
-  var displayWidth  = Math.floor(canvas.clientWidth * realToCSSPixels);
-  var displayHeight = Math.floor(canvas.clientHeight * realToCSSPixels);
+  var realToCSSPixels = window.devicePixelRatio; 
+  var displayWidth  = Math.floor(canvas.clientWidth); // *realToCSSPixels deleted for performance
+  var displayHeight = Math.floor(canvas.clientHeight); // *realToCSSPixels deleted for performance
   
   if (canvas.width !== displayWidth ||
       canvas.height !== displayHeight) {
@@ -252,10 +254,17 @@ function setUniforms(timeStamp) {
   timeUniformLocation = gl.getUniformLocation(program, "u_time");
   mouseUniformLocation = gl.getUniformLocation(program, "u_mouse");
 
+
+  mouseInX += (mouseX - mouseInX)*0.05;
+  mouseInY += (mouseY - mouseInY)*0.05;
+
+  // mouseLastX = mouseX;
+  // mouseLastY = mouseY;
+
   // Set time uniform
   gl.uniform1f(timeUniformLocation, timeStamp/1000.0);
   // Set mouse uniform
-  gl.uniform2f(mouseUniformLocation, mouseX/canvas.width, 1-mouseY/canvas.height);
+  gl.uniform2f(mouseUniformLocation, mouseInX/canvas.width, 1-mouseInY/canvas.height);
   // Set the resolution
   gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
 
